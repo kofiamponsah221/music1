@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- UPDATED: Tab Title and Custom Music Note Favicon -->
+    <title>K-Tune</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a855f7'><path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>" />
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(to bottom right, black, #111827, black);
+            color: #f3f4f6;
+            min-height: 100vh;
+            padding: 2rem;
+            padding-bottom: 8rem;
+            position: relative;
+        }
+        
+        /* RESTORED ANIMATIONS & GLOWS */
+        .floating-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(3rem);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.2; }
+        }
+        
+        .music-note {
+            position: absolute;
+            animation: bounce 4s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #d1d5db, #e5e7eb, #d1d5db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.05em;
+            text-shadow: 0 0 20px rgba(156, 163, 175, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .logo:hover { transform: scale(1.1) rotate(1deg); }
+        
+        .logo .music-icon {
+            width: 3rem;
+            height: 3rem;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+        }
+        
+        .logo:hover .music-icon {
+            color: #d1d5db;
+            transform: rotate(12deg);
+        }
+        
+        .tagline {
+            color: #6b7280;
+            font-size: 1.125rem;
+            margin-top: 1rem;
+        }
+        
+        .search-form {
+            position: relative;
+            margin-bottom: 3rem;
+            max-width: 42rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .search-glow {
+            position: absolute;
+            inset: -0.25rem;
+            background: linear-gradient(to right, #4b5563, #374151);
+            border-radius: 1rem;
+            filter: blur(0.75rem);
+            opacity: 0.15;
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        .search-container {
+            position: relative;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background: rgba(31, 41, 55, 0.5);
+            border: 1px solid rgba(55, 65, 81, 0.5);
+            outline: none;
+            color: #f3f4f6;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            box-shadow: 0 0 0 2px #4b5563;
+            border-color: #4b5563;
+        }
+        
+        .search-button {
+            background: linear-gradient(to right, #4b5563, #374151);
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: #f3f4f6;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .search-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(75, 85, 99, 0.25);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .songs-container {
+            max-height: calc(100vh - 400px);
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+        
+        .songs-container::-webkit-scrollbar { width: 8px; }
+        .songs-container::-webkit-scrollbar-track { background: rgba(55, 65, 81, 0.3); border-radius: 4px; }
+        .songs-container::-webkit-scrollbar-thumb { background: rgba(107, 114, 128, 0.5); border-radius: 4px; }
+        
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .song-card {
+            background: rgba(31, 41, 55, 0.3);
+            padding: 1rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(55, 65, 81, 0.3);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .song-card:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(31, 41, 55, 0.6);
+        }
+        
+        .song-artwork {
+            width: 100%;
+            height: 10rem;
+            object-fit: cover;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .song-card:hover .song-artwork {
+            transform: scale(1.1);
+            filter: brightness(1.1);
+        }
+        
+        .song-title {
+            font-weight: bold;
+            color: #f3f4f6;
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .song-artist { color: #9ca3af; font-size: 0.875rem; margin-bottom: 1rem; }
+        
+        .play-button {
+            margin-top: auto;
+            background: rgba(55, 65, 81, 0.5);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            font-size: 0.75rem;
+            color: #f3f4f6;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .play-button:hover { background: #4b5563; transform: scale(1.05); }
+        
+        /* PLAYER WINDOW STYLES */
+        .player-window {
+            position: fixed;
+            bottom: 2vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 900px;
+            height: 600px;
+            background: black;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            resize: both;
+            min-width: 600px;
+            min-height: 400px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .player-window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            transform: none !important;
+            border-radius: 0 !important;
+            resize: none !important;
+        }
+        
+        .player-header {
+            height: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .player-controls {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: grab;
+            user-select: none;
+        }
+        
+        .player-controls:active { cursor: grabbing; }
+        
+        .player-buttons { display: flex; gap: 1rem; }
+        
+        .player-button {
+            padding: 0.25rem;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: background 0.2s ease;
+        }
+        
+        .player-button:hover { background: rgba(255, 255, 255, 0.1); }
+        
+        .player-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .player-sidebar {
+            width: 320px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+        
+        .player-artwork {
+            width: 100%;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .player-info h3 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .player-info p { color: #3b82f6; font-weight: bold; }
+        
+        .player-controls-panel {
+            margin-top: auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .view-toggles {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            background: rgba(0,0,0,0.5);
+            padding: 0.25rem;
+            border-radius: 2rem;
+        }
+
+        .view-toggles button {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            padding: 0.5rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-toggles button.active {
+            background: linear-gradient(to right, #a855f7, #ec4899);
+            color: white;
+            box-shadow: 0 4px 10px rgba(168, 85, 247, 0.4);
+        }
+        
+        .visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            height: 3rem;
+        }
+        
+        .visualizer-bar {
+            width: 0.5rem;
+            background: linear-gradient(to top, #a855f7, #ec4899);
+            border-radius: 9999px;
+            animation: dance 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes dance {
+            0%, 100% { height: 20%; opacity: 0.5; }
+            50% { height: 100%; opacity: 1; }
+        }
+        
+        .play-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .main-play-button {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.5);
+        }
+        
+        .main-play-button.playing { background: linear-gradient(to right, #a855f7, #ec4899); }
+        .main-play-button.paused { background: #9333ea; }
+        .main-play-button:hover { transform: scale(1.05); box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.7); }
+        
+        .progress-container { position: relative; }
+        
+        .progress-glow {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, #a855f7, #ec4899);
+            border-radius: 9999px;
+            filter: blur(0.5rem);
+            opacity: 0.3;
+        }
+        
+        .progress-bar {
+            position: relative;
+            width: 100%;
+            height: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            appearance: none;
+            cursor: pointer;
+        }
+        
+        .progress-bar::-webkit-slider-thumb {
+            appearance: none;
+            width: 1rem;
+            height: 1rem;
+            background: #a855f7;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        
+        .main-view-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .lyrics-line {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.2);
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .lyrics-line:hover { color: rgba(255, 255, 255, 0.4); }
+        .lyrics-line.active { font-size: 2.25rem; font-weight: 900; color: white; }
+        
+        .resume-sync-button {
+            position: fixed;
+            bottom: 2.5rem;
+            right: 2.5rem;
+            background: #3b82f6;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .plain-lyrics { font-size: 1.25rem; color: rgba(255, 255, 255, 0.6); padding: 2.5rem; }
+
+        .wiki-container {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.4s ease-out;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #e5e7eb;
+        }
+
+        .wiki-header {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .wiki-link {
+            display: inline-block;
+            margin-top: 1.5rem;
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #60a5fa;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .wiki-link:hover { background: rgba(96, 165, 250, 0.2); }
+
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="env,react">
+        const { useState, useRef, useEffect } = React;
+
+        const GOOGLE_API_KEY = "AIzaSyAMwISLS8XAimuAcQ2-a3-cWLOzfkcyeMg";
+
+        function App() {
+            const [query, setQuery] = useState('');
+            const [results, setResults] = useState([]);
+            const [loading, setLoading] = useState(false);
+            
+            const [activeAudioId, setActiveAudioId] = useState(null);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [nowPlayingTrack, setNowPlayingTrack] = useState(null);
+            const [isPaused, setIsPaused] = useState(false);
+            const [currentTime, setCurrentTime] = useState(0);
+            const [duration, setDuration] = useState(0);
+            const [isMaximized, setIsMaximized] = useState(false);
+            
+            const [activeView, setActiveView] = useState('lyrics'); 
+            
+            const [lyricsType, setLyricsType] = useState('none');
+            const [plainLyrics, setPlainLyrics] = useState('');
+            const [syncedLyrics, setSyncedLyrics] = useState([]);
+            const [lyricsLoading, setLyricsLoading] = useState(false);
+            const [isManualScroll, setIsManualScroll] = useState(false);
+
+            const [wikiCache, setWikiCache] = useState({});
+            const [wikiLoading, setWikiLoading] = useState(false);
+
+            const ytPlayerRef = useRef(null);
+            const timeTrackerRef = useRef(null);
+            const playerRef = useRef(null);
+
+            const searchSongs = async (e) => {
+                e.preventDefault();
+                if (!query) return;
+                setLoading(true);
+                await new Promise(resolve => setTimeout(resolve, 800));
+                try {
+                    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=12`);
+                    const data = await res.json();
+                    setResults(data.results || []);
+                } catch (err) { console.error(err); } finally { setLoading(false); }
+            };
+
+            const streamFullAudio = async (song) => {
+                setIsPlaying(true); 
+                setNowPlayingTrack(song);
+                setActiveAudioId(null); 
+                setIsManualScroll(false); 
+                setIsPaused(false);
+                setActiveView('lyrics'); 
+                
+                try {
+                    const queries = [
+                        `${song.trackName} ${song.artistName} lyric video -vevo -official`,
+                        `${song.trackName} ${song.artistName} audio -vevo -official`,
+                        `${song.trackName} ${song.artistName} live`
+                    ];
+                    
+                    let foundVideo = null;
+                    for (const q of queries) {
+                        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&videoEmbeddable=true&key=${GOOGLE_API_KEY}&maxResults=3`);
+                        const data = await res.json();
+                        
+                        if (data.items?.length > 0) {
+                            const playableVideo = data.items.find(item => 
+                                !item.snippet.channelTitle.toLowerCase().includes('vevo') &&
+                                !item.snippet.channelTitle.toLowerCase().includes('official')
+                            ) || data.items[0];
+                            
+                            foundVideo = playableVideo.id.videoId;
+                            break;
+                        }
+                    }
+                    if (foundVideo) setActiveAudioId(foundVideo);
+                    else alert("No playable audio found. Try another song.");
+                } catch (e) { 
+                    alert("Search failed. Check your internet connection.");
+                }
+            };
+
+            const fetchLyrics = async (song) => {
+                setLyricsLoading(true); setLyricsType('none'); setSyncedLyrics([]);
+                try {
+                    const t = song.trackName.replace(/\(.*?\)|\[.*?\]/g, '').trim();
+                    const a = song.artistName.replace(/\(.*?\)|\[.*?\]/g, '').trim();
+                    const res = await fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(a)}&track_name=${encodeURIComponent(t)}`);
+                    const data = await res.json();
+                    if (data.syncedLyrics) {
+                        const lines = data.syncedLyrics.split('\n').map((l) => {
+                            const m = l.match(/\[(\d+):(\d+\.\d+)\](.*)/);
+                            return m ? { time: parseInt(m[1]) * 60 + parseFloat(m[2]), text: m[3].trim() } : null;
+                        }).filter((l) => l && l.text && l.text !== '¨');
+                        setSyncedLyrics(lines); setLyricsType('synced');
+                    } else { 
+                        setPlainLyrics(data.plainLyrics || "No lyrics found."); setLyricsType('plain'); 
+                    }
+                } catch (e) { 
+                    setLyricsType('plain'); setPlainLyrics("Error loading lyrics."); 
+                } finally { setLyricsLoading(false); }
+            };
+
+            const fetchWikiData = async (song) => {
+                if (wikiCache[song.trackId]) return; 
+                
+                setWikiLoading(true);
+                try {
+                    const exactSearchQuery = `"${song.trackName}" ${song.artistName} song`;
+                    let searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(exactSearchQuery)}&utf8=&format=json&origin=*`;
+                    
+                    let searchRes = await fetch(searchUrl);
+                    let searchData = await searchRes.json();
+                    
+                    let pageTitle = '';
+                    let isArtistFallback = false;
+
+                    if (searchData.query.search.length > 0) {
+                        pageTitle = searchData.query.search[0].title;
+                    } else {
+                        const artistSearchQuery = song.artistName;
+                        searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(artistSearchQuery)}&utf8=&format=json&origin=*`;
+                        searchRes = await fetch(searchUrl);
+                        searchData = await searchRes.json();
+                        
+                        if (searchData.query.search.length > 0) {
+                            pageTitle = searchData.query.search[0].title;
+                            isArtistFallback = true;
+                        }
+                    }
+
+                    if (pageTitle) {
+                        const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exsentences=7&exintro=1&explaintext=1&titles=${encodeURIComponent(pageTitle)}&format=json&origin=*`;
+                        const extractRes = await fetch(extractUrl);
+                        const extractData = await extractRes.json();
+                        
+                        const pages = extractData.query.pages;
+                        const pageId = Object.keys(pages)[0];
+                        const extractText = pages[pageId].extract;
+
+                        if (extractText && extractText.trim().length > 0) {
+                            setWikiCache(prev => ({
+                                ...prev, 
+                                [song.trackId]: {
+                                    text: extractText,
+                                    title: pageTitle,
+                                    link: `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}`,
+                                    isFallback: isArtistFallback
+                                }
+                            }));
+                        } else {
+                            setWikiCache(prev => ({...prev, [song.trackId]: { text: "No Wikipedia summary available.", link: null }}));
+                        }
+                    } else {
+                        setWikiCache(prev => ({...prev, [song.trackId]: { text: "No Wikipedia entry found.", link: null }}));
+                    }
+                } catch (error) {
+                    setWikiCache(prev => ({...prev, [song.trackId]: { text: "Failed to connect to Wikipedia.", link: null }}));
+                }
+                setWikiLoading(false);
+            };
+
+            const toggleView = (view) => {
+                setActiveView(view);
+                if (view === 'wiki' && nowPlayingTrack) {
+                    fetchWikiData(nowPlayingTrack);
+                }
+            };
+
+            const onPlayerReady = (e) => {
+                ytPlayerRef.current = e.target;
+                setDuration(e.target.getDuration());
+                if (timeTrackerRef.current) clearInterval(timeTrackerRef.current);
+                timeTrackerRef.current = setInterval(() => setCurrentTime(e.target.getCurrentTime()), 300);
+                e.target.playVideo(); 
+            };
+
+            const togglePlay = () => {
+                if (!ytPlayerRef.current) return;
+                if (isPaused) { ytPlayerRef.current.playVideo(); setIsPaused(false); }
+                else { ytPlayerRef.current.pauseVideo(); setIsPaused(true); }
+            };
+
+            const jumpTo = (t) => {
+                if (ytPlayerRef.current) { ytPlayerRef.current.seekTo(t, true); setCurrentTime(t); setIsManualScroll(false); }
+            };
+
+            const terminate = () => {
+                setIsPlaying(false); setActiveAudioId(null); setIsMaximized(false);
+                if (timeTrackerRef.current) clearInterval(timeTrackerRef.current);
+            };
+
+            const activeIdx = syncedLyrics.reduce((acc, l, i) => (currentTime >= l.time - 0.3 ? i : acc), -1);
+
+            useEffect(() => {
+                if (activeView === 'lyrics' && activeIdx !== -1 && !isManualScroll) {
+                    document.getElementById(`lyric-${activeIdx}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, [activeIdx, isManualScroll, activeView]);
+
+            useEffect(() => {
+                if (!window.YT) {
+                    const tag = document.createElement('script');
+                    tag.src = 'https://www.youtube.com/iframe_api';
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                }
+
+                window.onYouTubeIframeAPIReady = () => {
+                    if (activeAudioId && playerRef.current) {
+                        if (ytPlayerRef.current) ytPlayerRef.current.destroy();
+                        let safeOrigin = window.location.origin;
+                        if (!safeOrigin || safeOrigin === 'null' || window.location.protocol === 'file:') safeOrigin = 'http://localhost:5173'; 
+
+                        ytPlayerRef.current = new window.YT.Player(playerRef.current, {
+                            videoId: activeAudioId,
+                            events: {
+                                onReady: onPlayerReady,
+                                onError: () => alert(`Stream blocked. Try another song.`),
+                                onStateChange: (event) => {
+                                    if (event.data === window.YT.PlayerState.PLAYING) setIsPaused(false);
+                                    else if (event.data === window.YT.PlayerState.PAUSED) setIsPaused(true);
+                                    else if (event.data === window.YT.PlayerState.ENDED) terminate();
+                                }
+                            },
+                            playerVars: { autoplay: 1, controls: 0, origin: safeOrigin }
+                        });
+                    }
+                };
+
+                if (window.YT && window.YT.Player) window.onYouTubeIframeAPIReady();
+            }, [activeAudioId]);
+
+            useEffect(() => {
+                const playerWindow = document.querySelector('.player-window');
+                if (!playerWindow || !isPlaying) return;
+
+                if (isMaximized) {
+                    playerWindow.style.left = ''; playerWindow.style.top = ''; playerWindow.style.bottom = '';
+                    playerWindow.style.transform = ''; playerWindow.style.width = ''; playerWindow.style.height = '';
+                    return; 
+                }
+
+                const header = playerWindow.querySelector('.player-controls');
+                if (!header) return;
+
+                let isDragging = false;
+                let startX, startY, initialLeft, initialTop;
+
+                const handleMouseDown = (e) => {
+                    isDragging = true;
+                    startX = e.clientX; startY = e.clientY;
+                    const rect = playerWindow.getBoundingClientRect();
+                    initialLeft = rect.left; initialTop = rect.top;
+                    header.style.cursor = 'grabbing';
+                    e.preventDefault();
+                };
+
+                const handleMouseMove = (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    playerWindow.style.bottom = 'auto'; playerWindow.style.right = 'auto'; playerWindow.style.transform = 'none';
+
+                    const deltaX = e.clientX - startX; const deltaY = e.clientY - startY;
+                    const newLeft = initialLeft + deltaX; const newTop = initialTop + deltaY;
+                    
+                    const maxX = window.innerWidth - playerWindow.offsetWidth;
+                    const maxY = window.innerHeight - playerWindow.offsetHeight;
+                    
+                    playerWindow.style.left = `${Math.max(0, Math.min(newLeft, maxX))}px`;
+                    playerWindow.style.top = `${Math.max(0, Math.min(newTop, maxY))}px`;
+                };
+
+                const handleMouseUp = () => { isDragging = false; header.style.cursor = 'grab'; };
+
+                header.addEventListener('mousedown', handleMouseDown);
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+
+                return () => {
+                    header.removeEventListener('mousedown', handleMouseDown);
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                };
+            }, [isPlaying, isMaximized]);
+
+            return (
+                <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                        <div className="floating-orb" style={{ top: '5rem', left: '2.5rem', width: '8rem', height: '8rem', background: 'rgba(30, 58, 138, 0.2)' }}></div>
+                        <div className="floating-orb" style={{ top: '10rem', right: '5rem', width: '12rem', height: '12rem', background: 'rgba(30, 64, 175, 0.15)', animationDelay: '1s' }}></div>
+                        <div className="floating-orb" style={{ bottom: '10rem', left: '5rem', width: '10rem', height: '10rem', background: 'rgba(55, 65, 81, 0.1)', animationDelay: '2s' }}></div>
+                        <div className="floating-orb" style={{ top: '15rem', right: '10rem', width: '9rem', height: '9rem', background: 'rgba(30, 58, 138, 0.2)', animationDelay: '3s' }}></div>
+                        
+                        <div className="music-note" style={{ top: '8rem', left: '25%', color: '#6b7280', fontSize: '2.5rem', opacity: 0.3, animationDelay: '0s', animationDuration: '4s' }}>♪</div>
+                        <div className="music-note" style={{ top: '13rem', right: '33%', color: '#4b5563', fontSize: '1.875rem', opacity: 0.3, animationDelay: '1s', animationDuration: '3.5s' }}>♫</div>
+                        <div className="music-note" style={{ bottom: '13rem', left: '50%', color: '#9ca3af', fontSize: '3.125rem', opacity: 0.3, animationDelay: '2s', animationDuration: '4.5s' }}>♬</div>
+                    </div>
+                    
+                    <div className="container">
+                        <header className="header">
+                            <div style={{ position: 'relative' }}>
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #4b5563, #6b7280, #4b5563)', filter: 'blur(3rem)', opacity: 0.2, animation: 'pulse 4s ease-in-out infinite' }}></div>
+                                <h1 className="logo">
+                                    <span style={{ fontFamily: 'Impact, sans-serif', fontWeight: '900' }}>K</span>
+                                    <span style={{ fontFamily: 'Arial, sans-serif', fontWeight: '300', fontSize: '2.5rem' }}>-</span>
+                                    <span style={{ fontFamily: 'Impact, sans-serif', fontWeight: '900' }}>TUNE</span>
+                                </h1>
+                            </div>
+                            <p className="tagline">Your Personal Music Universe</p>
+                        </header>
+                        
+                        <div className="search-form">
+                            <div className="search-glow"></div>
+                            <form onSubmit={searchSongs} className="search-container">
+                                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search artist or track..." className="search-input" />
+                                <button type="submit" className="search-button">{loading ? 'SEARCHING' : 'SEARCH'}</button>
+                            </form>
+                        </div>
+                        
+                        <div className="songs-container">
+                            <div className="songs-grid">
+                            {results.map((s) => (
+                                <div key={s.trackId} className="song-card">
+                                    <img src={s.artworkUrl100.replace('100x100', '300x300')} className="song-artwork" />
+                                    <h2 className="song-title">{s.trackName}</h2>
+                                    <p className="song-artist">{s.artistName}</p>
+                                    <button onClick={() => { streamFullAudio(s); fetchLyrics(s); }} className="play-button">PLAY &amp; SYNC</button>
+                                </div>
+                            ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {isPlaying && (
+                        <div className={`player-window ${isMaximized ? 'maximized' : ''}`}>
+                            <div className="player-header">
+                                <div className="player-controls">
+                                    <span style={{ fontSize: '0.625rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>K-TUNE ENGINE</span>
+                                </div>
+                                <div className="player-buttons">
+                                    <button className="player-button" onClick={() => setIsMaximized(!isMaximized)}>
+                                        {isMaximized ? '🗗' : '🗖'}
+                                    </button>
+                                    <button className="player-button" onClick={terminate}>✕</button>
+                                </div>
+                            </div>
+                            
+                            <div className="player-content">
+                                <div style={{ position: 'absolute', inset: 0, opacity: 0.3, pointerEvents: 'none', background: `url(${nowPlayingTrack?.artworkUrl100.replace('100x100','600x600')}) center/cover`, filter: 'blur(3rem)' }}></div>
+                                
+                                <div className="player-sidebar">
+                                    <img src={nowPlayingTrack?.artworkUrl100.replace('100x100','600x600')} className="player-artwork" />
+                                    <div className="player-info">
+                                        <h3>{nowPlayingTrack?.trackName}</h3>
+                                        <p>{nowPlayingTrack?.artistName}</p>
+                                    </div>
+                                    
+                                    <div className="view-toggles">
+                                        <button className={activeView === 'lyrics' ? 'active' : ''} onClick={() => toggleView('lyrics')}>LYRICS</button>
+                                        <button className={activeView === 'wiki' ? 'active' : ''} onClick={() => toggleView('wiki')}>WIKIPEDIA</button>
+                                    </div>
+
+                                    <div className="player-controls-panel">
+                                        <div className="visualizer">
+                                            {[...Array(12)].map((_, i) => (
+                                                <div key={i} className="visualizer-bar" style={{ animationDelay: `${i * 0.05}s`, animationDuration: `${1.5 + (i * 0.1)}s` }}></div>
+                                            ))}
+                                        </div>
+                                        
+                                        <div className="play-controls">
+                                            <button className={`main-play-button ${isPaused ? 'paused' : 'playing'}`} onClick={togglePlay}>
+                                                {isPaused ? '▶' : '⏸'}
+                                            </button>
+                                        </div>
+                                        
+                                        <div className="progress-container">
+                                            <div className="progress-glow"></div>
+                                            <input type="range" min="0" max={duration} value={currentTime} onChange={e => jumpTo(parseFloat(e.target.value))} className="progress-bar" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '300px', height: '300px' }}>
+                                        <div ref={playerRef}></div>
+                                    </div>
+                                </div>
+                                
+                                <div className="main-view-area" onWheel={() => setIsManualScroll(true)}>
+                                    {activeView === 'lyrics' ? (
+                                        <>
+                                            {isManualScroll && lyricsType === 'synced' && (
+                                                <button onClick={() => setIsManualScroll(false)} className="resume-sync-button">RESUME SYNC</button>
+                                            )}
+                                            {lyricsType === 'synced' ? (
+                                                <div style={{ paddingTop: '10rem', paddingBottom: '10rem' }}>
+                                                    {syncedLyrics.map((l, i) => (
+                                                        <p key={i} id={`lyric-${i}`} onClick={() => jumpTo(l.time)} className={`lyrics-line ${i === activeIdx ? 'active' : ''}`}>{l.text}</p>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="plain-lyrics">{plainLyrics}</p>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="wiki-container">
+                                            {wikiLoading && !wikiCache[nowPlayingTrack?.trackId] ? (
+                                                <div style={{ textAlign: 'center', padding: '3rem' }}>Fetching Global Archives...</div>
+                                            ) : (
+                                                <div>
+                                                    <h2 className="wiki-header">
+                                                        📖 {wikiCache[nowPlayingTrack?.trackId]?.title || 'Encyclopedia'}
+                                                    </h2>
+                                                    {wikiCache[nowPlayingTrack?.trackId]?.isFallback && (
+                                                        <div style={{ color: '#a855f7', fontWeight: 'bold', marginBottom: '1rem', fontSize: '1rem' }}>
+                                                            ℹ️ Song specific page not found. Showing Artist history instead.
+                                                        </div>
+                                                    )}
+                                                    <p>{wikiCache[nowPlayingTrack?.trackId]?.text}</p>
+                                                    {wikiCache[nowPlayingTrack?.trackId]?.link && (
+                                                        <a href={wikiCache[nowPlayingTrack?.trackId].link} target="_blank" rel="noopener noreferrer" className="wiki-link">
+                                                            Read full article on Wikipedia ↗
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
