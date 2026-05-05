@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- UPDATED: Tab Title and Custom Music Note Favicon -->
     <title>K-Tune</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a855f7'><path d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>" />
     
@@ -12,11 +10,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -28,7 +22,6 @@
             position: relative;
         }
         
-        /* RESTORED ANIMATIONS & GLOWS */
         .floating-orb {
             position: absolute;
             border-radius: 50%;
@@ -41,27 +34,14 @@
             50% { opacity: 0.2; }
         }
         
-        .music-note {
-            position: absolute;
-            animation: bounce 4s ease-in-out infinite;
-        }
-        
+        .music-note { position: absolute; animation: bounce 4s ease-in-out infinite; }
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
         
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
+        .container { max-width: 1280px; margin: 0 auto; position: relative; z-index: 10; }
+        .header { text-align: center; margin-bottom: 3rem; }
         
         .logo {
             font-size: 4rem;
@@ -79,468 +59,156 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        
         .logo:hover { transform: scale(1.1) rotate(1deg); }
+        .tagline { color: #6b7280; font-size: 1.125rem; margin-top: 1rem; }
         
-        .logo .music-icon {
-            width: 3rem;
-            height: 3rem;
-            color: #9ca3af;
-            transition: all 0.3s ease;
-        }
-        
-        .logo:hover .music-icon {
-            color: #d1d5db;
-            transform: rotate(12deg);
-        }
-        
-        .tagline {
-            color: #6b7280;
-            font-size: 1.125rem;
-            margin-top: 1rem;
-        }
-        
-        .search-form {
-            position: relative;
-            margin-bottom: 3rem;
-            max-width: 42rem;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
+        .search-form { position: relative; margin-bottom: 3rem; max-width: 42rem; margin-left: auto; margin-right: auto; }
         .search-glow {
-            position: absolute;
-            inset: -0.25rem;
+            position: absolute; inset: -0.25rem;
             background: linear-gradient(to right, #4b5563, #374151);
-            border-radius: 1rem;
-            filter: blur(0.75rem);
-            opacity: 0.15;
+            border-radius: 1rem; filter: blur(0.75rem); opacity: 0.15;
             animation: pulse 3s ease-in-out infinite;
         }
-        
-        .search-container {
-            position: relative;
-            display: flex;
-            gap: 1rem;
-        }
-        
+        .search-container { position: relative; display: flex; gap: 1rem; }
         .search-input {
-            flex: 1;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            background: rgba(31, 41, 55, 0.5);
-            border: 1px solid rgba(55, 65, 81, 0.5);
-            outline: none;
-            color: #f3f4f6;
-            transition: all 0.3s ease;
+            flex: 1; padding: 1rem; border-radius: 0.75rem;
+            background: rgba(31, 41, 55, 0.5); border: 1px solid rgba(55, 65, 81, 0.5);
+            outline: none; color: #f3f4f6; transition: all 0.3s ease;
         }
-        
-        .search-input:focus {
-            box-shadow: 0 0 0 2px #4b5563;
-            border-color: #4b5563;
-        }
-        
+        .search-input:focus { box-shadow: 0 0 0 2px #4b5563; border-color: #4b5563; }
         .search-button {
             background: linear-gradient(to right, #4b5563, #374151);
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            color: #f3f4f6;
-            border: none;
-            cursor: pointer;
+            padding: 1rem 2rem; border-radius: 0.75rem; font-weight: bold;
+            transition: all 0.3s ease; color: #f3f4f6; border: none; cursor: pointer;
         }
+        .search-button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(75, 85, 99, 0.25); }
         
-        .search-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(75, 85, 99, 0.25);
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 1rem;
-            height: 1rem;
-            border: 2px solid #f3f4f6;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .songs-container {
-            max-height: calc(100vh - 400px);
-            overflow-y: auto;
-            padding-right: 1rem;
-        }
-        
+        .songs-container { max-height: calc(100vh - 400px); overflow-y: auto; padding-right: 1rem; }
         .songs-container::-webkit-scrollbar { width: 8px; }
         .songs-container::-webkit-scrollbar-track { background: rgba(55, 65, 81, 0.3); border-radius: 4px; }
         .songs-container::-webkit-scrollbar-thumb { background: rgba(107, 114, 128, 0.5); border-radius: 4px; }
         
-        .songs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
+        .songs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
         
         .song-card {
-            background: rgba(31, 41, 55, 0.3);
-            padding: 1rem;
-            border-radius: 1rem;
-            border: 1px solid rgba(55, 65, 81, 0.3);
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            animation: fadeInUp 0.5s ease-out;
+            background: rgba(31, 41, 55, 0.3); padding: 1rem; border-radius: 1rem;
+            border: 1px solid rgba(55, 65, 81, 0.3); display: flex; flex-direction: column;
+            transition: all 0.3s ease; cursor: pointer; animation: fadeInUp 0.5s ease-out;
         }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .song-card:hover { transform: scale(1.05) translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); background: rgba(31, 41, 55, 0.6); }
         
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .song-card:hover {
-            transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            background: rgba(31, 41, 55, 0.6);
-        }
-        
-        .song-artwork {
-            width: 100%;
-            height: 10rem;
-            object-fit: cover;
-            border-radius: 0.75rem;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .song-card:hover .song-artwork {
-            transform: scale(1.1);
-            filter: brightness(1.1);
-        }
-        
-        .song-title {
-            font-weight: bold;
-            color: #f3f4f6;
-            margin-bottom: 0.25rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
+        .song-artwork { width: 100%; height: 10rem; object-fit: cover; border-radius: 0.75rem; margin-bottom: 1rem; transition: all 0.3s ease; }
+        .song-card:hover .song-artwork { transform: scale(1.1); filter: brightness(1.1); }
+        .song-title { font-weight: bold; color: #f3f4f6; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .song-artist { color: #9ca3af; font-size: 0.875rem; margin-bottom: 1rem; }
-        
-        .play-button {
-            margin-top: auto;
-            background: rgba(55, 65, 81, 0.5);
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            font-size: 0.75rem;
-            color: #f3f4f6;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
+        .play-button { margin-top: auto; background: rgba(55, 65, 81, 0.5); padding: 0.75rem; border-radius: 0.5rem; font-weight: bold; font-size: 0.75rem; color: #f3f4f6; border: none; cursor: pointer; transition: all 0.3s ease; }
         .play-button:hover { background: #4b5563; transform: scale(1.05); }
         
-        /* PLAYER WINDOW STYLES */
+        /* PLAYER WINDOW STYLES (Default Laptop) */
         .player-window {
-            position: fixed;
-            bottom: 2vh;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 900px;
-            height: 600px;
-            background: black;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            resize: both;
-            min-width: 600px;
-            min-height: 400px;
-            transition: opacity 0.3s ease;
+            position: fixed; bottom: 2vh; left: 50%; transform: translateX(-50%);
+            width: 900px; height: 600px; background: black;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.5rem;
+            overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 50; display: flex; flex-direction: column;
+            resize: both; min-width: 600px; min-height: 400px; transition: opacity 0.3s ease;
         }
         
         .player-window.maximized {
-            top: 0 !important;
-            left: 0 !important;
-            bottom: 0 !important;
-            right: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            transform: none !important;
-            border-radius: 0 !important;
-            resize: none !important;
+            top: 0 !important; left: 0 !important; bottom: 0 !important; right: 0 !important;
+            width: 100vw !important; height: 100vh !important; transform: none !important;
+            border-radius: 0 !important; resize: none !important;
         }
         
-        .player-header {
-            height: 3rem;
-            background: rgba(255, 255, 255, 0.05);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .player-controls {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: grab;
-            user-select: none;
-        }
-        
+        .player-header { height: 3rem; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .player-controls { flex: 1; display: flex; align-items: center; gap: 0.5rem; cursor: grab; user-select: none; touch-action: none; }
         .player-controls:active { cursor: grabbing; }
-        
         .player-buttons { display: flex; gap: 1rem; }
-        
-        .player-button {
-            padding: 0.25rem;
-            background: none;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            border-radius: 0.25rem;
-            transition: background 0.2s ease;
-        }
-        
+        .player-button { padding: 0.25rem; background: none; border: none; color: #9ca3af; cursor: pointer; border-radius: 0.25rem; transition: background 0.2s ease; }
         .player-button:hover { background: rgba(255, 255, 255, 0.1); }
         
-        .player-content {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .player-sidebar {
-            width: 320px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            background: rgba(0, 0, 0, 0.4);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10;
-        }
-        
-        .player-artwork {
-            width: 100%;
-            border-radius: 1rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        
-        .player-info h3 {
-            font-size: 1.5rem;
-            font-weight: 900;
-            margin-bottom: 0.5rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
+        .player-content { flex: 1; display: flex; overflow: hidden; position: relative; }
+        .player-sidebar { width: 320px; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; background: rgba(0, 0, 0, 0.4); border-right: 1px solid rgba(255, 255, 255, 0.1); z-index: 10; }
+        .player-artwork { width: 100%; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .player-info h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .player-info p { color: #3b82f6; font-weight: bold; }
         
-        .player-controls-panel {
-            margin-top: auto;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1rem;
-            border-radius: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .view-toggles {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            background: rgba(0,0,0,0.5);
-            padding: 0.25rem;
-            border-radius: 2rem;
-        }
-
-        .view-toggles button {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #9ca3af;
-            padding: 0.5rem;
-            border-radius: 2rem;
-            font-weight: bold;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .view-toggles button.active {
-            background: linear-gradient(to right, #a855f7, #ec4899);
-            color: white;
-            box-shadow: 0 4px 10px rgba(168, 85, 247, 0.4);
-        }
+        .player-controls-panel { margin-top: auto; background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+        .view-toggles { display: flex; gap: 0.5rem; margin-top: 0.5rem; background: rgba(0,0,0,0.5); padding: 0.25rem; border-radius: 2rem; }
+        .view-toggles button { flex: 1; background: transparent; border: none; color: #9ca3af; padding: 0.5rem; border-radius: 2rem; font-weight: bold; font-size: 0.75rem; cursor: pointer; transition: all 0.3s ease; }
+        .view-toggles button.active { background: linear-gradient(to right, #a855f7, #ec4899); color: white; box-shadow: 0 4px 10px rgba(168, 85, 247, 0.4); }
         
-        .visualizer {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.25rem;
-            height: 3rem;
-        }
+        .visualizer { display: flex; align-items: center; justify-content: center; gap: 0.25rem; height: 3rem; }
+        .visualizer-bar { width: 0.5rem; background: linear-gradient(to top, #a855f7, #ec4899); border-radius: 9999px; animation: dance 1.5s ease-in-out infinite; }
+        @keyframes dance { 0%, 100% { height: 20%; opacity: 0.5; } 50% { height: 100%; opacity: 1; } }
         
-        .visualizer-bar {
-            width: 0.5rem;
-            background: linear-gradient(to top, #a855f7, #ec4899);
-            border-radius: 9999px;
-            animation: dance 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes dance {
-            0%, 100% { height: 20%; opacity: 0.5; }
-            50% { height: 100%; opacity: 1; }
-        }
-        
-        .play-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .main-play-button {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.5);
-        }
-        
+        .play-controls { display: flex; align-items: center; justify-content: space-between; }
+        .main-play-button { width: 3rem; height: 3rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.5); }
         .main-play-button.playing { background: linear-gradient(to right, #a855f7, #ec4899); }
         .main-play-button.paused { background: #9333ea; }
-        .main-play-button:hover { transform: scale(1.05); box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.7); }
-        
         .progress-container { position: relative; }
+        .progress-glow { position: absolute; inset: 0; background: linear-gradient(to right, #a855f7, #ec4899); border-radius: 9999px; filter: blur(0.5rem); opacity: 0.3; }
+        .progress-bar { position: relative; width: 100%; height: 0.5rem; background: rgba(255, 255, 255, 0.1); border-radius: 9999px; appearance: none; cursor: pointer; }
+        .progress-bar::-webkit-slider-thumb { appearance: none; width: 1rem; height: 1rem; background: #a855f7; border-radius: 50%; cursor: pointer; }
+        .time-display { display: flex; justify-content: space-between; font-size: 0.75rem; color: #9ca3af; }
         
-        .progress-glow {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to right, #a855f7, #ec4899);
-            border-radius: 9999px;
-            filter: blur(0.5rem);
-            opacity: 0.3;
-        }
+        .main-view-area { flex: 1; padding: 2rem; overflow-y: auto; position: relative; z-index: 10; }
+        .lyrics-padding { padding-top: 10rem; padding-bottom: 10rem; }
         
-        .progress-bar {
-            position: relative;
-            width: 100%;
-            height: 0.5rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 9999px;
-            appearance: none;
-            cursor: pointer;
-        }
-        
-        .progress-bar::-webkit-slider-thumb {
-            appearance: none;
-            width: 1rem;
-            height: 1rem;
-            background: #a855f7;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        
-        .time-display {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #9ca3af;
-        }
-        
-        .main-view-area {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-            position: relative;
-            z-index: 10;
-        }
-
-        .lyrics-line {
-            font-size: 1.25rem;
-            color: rgba(255, 255, 255, 0.2);
-            margin-bottom: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .lyrics-line:hover { color: rgba(255, 255, 255, 0.4); }
+        .lyrics-line { font-size: 1.25rem; color: rgba(255, 255, 255, 0.2); margin-bottom: 1.5rem; cursor: pointer; transition: all 0.3s ease; }
         .lyrics-line.active { font-size: 2.25rem; font-weight: 900; color: white; }
-        
-        .resume-sync-button {
-            position: fixed;
-            bottom: 2.5rem;
-            right: 2.5rem;
-            background: #3b82f6;
-            padding: 0.5rem 1.5rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
-        
+        .resume-sync-button { position: fixed; bottom: 2.5rem; right: 2.5rem; background: #3b82f6; padding: 0.5rem 1.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); border: none; color: white; cursor: pointer; z-index: 100;}
         .plain-lyrics { font-size: 1.25rem; color: rgba(255, 255, 255, 0.6); padding: 2.5rem; }
 
-        .wiki-container {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(168, 85, 247, 0.3);
-            border-radius: 1rem;
-            padding: 2rem;
-            backdrop-filter: blur(10px);
-            animation: fadeIn 0.4s ease-out;
-            font-size: 1.2rem;
-            line-height: 1.8;
-            color: #e5e7eb;
+        .wiki-container { background: rgba(0,0,0,0.4); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 1rem; padding: 2rem; backdrop-filter: blur(10px); animation: fadeIn 0.4s ease-out; font-size: 1.2rem; line-height: 1.8; color: #e5e7eb; }
+        .wiki-header { font-size: 2rem; font-weight: 900; margin-bottom: 1rem; color: white; display: flex; align-items: center; gap: 0.5rem; }
+        .wiki-link { display: inline-block; margin-top: 1.5rem; color: #60a5fa; text-decoration: none; font-weight: bold; border: 1px solid #60a5fa; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.2s; }
+
+        /* ========================================= */
+        /* THE MAGIC: MOBILE RESPONSIVE MEDIA STYLES */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            body { padding: 1rem; padding-bottom: 6rem; }
+            .logo { font-size: 2.5rem; }
+            .search-container { flex-direction: column; }
+            .search-button { padding: 1rem; }
+            .songs-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+            
+            /* Force Player Window to Full Screen on Mobile */
+            .player-window {
+                width: 100vw !important; height: 100vh !important;
+                max-width: 100vw !important; max-height: 100vh !important;
+                min-width: 100vw !important; min-height: 100vh !important;
+                top: 0 !important; left: 0 !important; bottom: 0 !important; right: 0 !important;
+                transform: none !important; border-radius: 0 !important; resize: none !important;
+            }
+            
+            /* Stack layout for mobile player */
+            .player-content { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+            
+            /* Shrink Sidebar and center contents */
+            .player-sidebar {
+                width: 100%; padding: 1.5rem; align-items: center;
+                border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .player-artwork { width: 60%; max-width: 250px; margin: 0 auto; }
+            .player-info { text-align: center; width: 100%; }
+            .player-controls-panel { width: 100%; }
+            .view-toggles { width: 100%; }
+            
+            /* Allow scroll inside the stacked layout */
+            .main-view-area { padding: 1.5rem; overflow-y: visible; flex: none; }
+            .lyrics-padding { padding-top: 3rem; padding-bottom: 5rem; }
+            
+            .lyrics-line { font-size: 1.1rem; }
+            .lyrics-line.active { font-size: 1.75rem; }
+            .wiki-container { font-size: 1rem; padding: 1.5rem; }
+            .wiki-header { font-size: 1.5rem; }
+
+            /* Hide the maximize button on phones because it's already full screen */
+            .maximize-btn { display: none !important; }
         }
-
-        .wiki-header {
-            font-size: 2rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .wiki-link {
-            display: inline-block;
-            margin-top: 1.5rem;
-            color: #60a5fa;
-            text-decoration: none;
-            font-weight: bold;
-            border: 1px solid #60a5fa;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s;
-        }
-
-        .wiki-link:hover { background: rgba(96, 165, 250, 0.2); }
-
     </style>
 </head>
 <body>
@@ -565,7 +233,6 @@
             const [isMaximized, setIsMaximized] = useState(false);
             
             const [activeView, setActiveView] = useState('lyrics'); 
-            
             const [lyricsType, setLyricsType] = useState('none');
             const [plainLyrics, setPlainLyrics] = useState('');
             const [syncedLyrics, setSyncedLyrics] = useState([]);
@@ -710,9 +377,7 @@
 
             const toggleView = (view) => {
                 setActiveView(view);
-                if (view === 'wiki' && nowPlayingTrack) {
-                    fetchWikiData(nowPlayingTrack);
-                }
+                if (view === 'wiki' && nowPlayingTrack) fetchWikiData(nowPlayingTrack);
             };
 
             const onPlayerReady = (e) => {
@@ -779,6 +444,7 @@
                 if (window.YT && window.YT.Player) window.onYouTubeIframeAPIReady();
             }, [activeAudioId]);
 
+            // MOBILE AND MOUSE DRAG/TOUCH LOGIC
             useEffect(() => {
                 const playerWindow = document.querySelector('.player-window');
                 if (!playerWindow || !isPlaying) return;
@@ -795,22 +461,34 @@
                 let isDragging = false;
                 let startX, startY, initialLeft, initialTop;
 
-                const handleMouseDown = (e) => {
+                const handleDown = (e) => {
+                    // Disable dragging entirely if on a mobile phone (CSS handles fullscreen)
+                    if (window.innerWidth <= 768) return; 
+                    
                     isDragging = true;
-                    startX = e.clientX; startY = e.clientY;
+                    // Support both Mouse and Touch
+                    startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                    startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                    
                     const rect = playerWindow.getBoundingClientRect();
                     initialLeft = rect.left; initialTop = rect.top;
                     header.style.cursor = 'grabbing';
-                    e.preventDefault();
                 };
 
-                const handleMouseMove = (e) => {
+                const handleMove = (e) => {
                     if (!isDragging) return;
-                    e.preventDefault();
+                    e.preventDefault(); // Stop scrolling while dragging
+                    
                     playerWindow.style.bottom = 'auto'; playerWindow.style.right = 'auto'; playerWindow.style.transform = 'none';
 
-                    const deltaX = e.clientX - startX; const deltaY = e.clientY - startY;
-                    const newLeft = initialLeft + deltaX; const newTop = initialTop + deltaY;
+                    const currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                    const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                    const deltaX = currentX - startX; 
+                    const deltaY = currentY - startY;
+                    
+                    const newLeft = initialLeft + deltaX; 
+                    const newTop = initialTop + deltaY;
                     
                     const maxX = window.innerWidth - playerWindow.offsetWidth;
                     const maxY = window.innerHeight - playerWindow.offsetHeight;
@@ -819,16 +497,25 @@
                     playerWindow.style.top = `${Math.max(0, Math.min(newTop, maxY))}px`;
                 };
 
-                const handleMouseUp = () => { isDragging = false; header.style.cursor = 'grab'; };
+                const handleUp = () => { isDragging = false; header.style.cursor = 'grab'; };
 
-                header.addEventListener('mousedown', handleMouseDown);
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
+                // Mouse Events
+                header.addEventListener('mousedown', handleDown);
+                document.addEventListener('mousemove', handleMove, { passive: false });
+                document.addEventListener('mouseup', handleUp);
+                
+                // Touch Events for Tablets/iPads
+                header.addEventListener('touchstart', handleDown, { passive: false });
+                document.addEventListener('touchmove', handleMove, { passive: false });
+                document.addEventListener('touchend', handleUp);
 
                 return () => {
-                    header.removeEventListener('mousedown', handleMouseDown);
-                    document.removeEventListener('mousemove', handleMouseMove);
-                    document.removeEventListener('mouseup', handleMouseUp);
+                    header.removeEventListener('mousedown', handleDown);
+                    document.removeEventListener('mousemove', handleMove);
+                    document.removeEventListener('mouseup', handleUp);
+                    header.removeEventListener('touchstart', handleDown);
+                    document.removeEventListener('touchmove', handleMove);
+                    document.removeEventListener('touchend', handleUp);
                 };
             }, [isPlaying, isMaximized]);
 
@@ -887,7 +574,7 @@
                                     <span style={{ fontSize: '0.625rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>K-TUNE ENGINE</span>
                                 </div>
                                 <div className="player-buttons">
-                                    <button className="player-button" onClick={() => setIsMaximized(!isMaximized)}>
+                                    <button className="player-button maximize-btn" onClick={() => setIsMaximized(!isMaximized)}>
                                         {isMaximized ? '🗗' : '🗖'}
                                     </button>
                                     <button className="player-button" onClick={terminate}>✕</button>
@@ -940,7 +627,7 @@
                                                 <button onClick={() => setIsManualScroll(false)} className="resume-sync-button">RESUME SYNC</button>
                                             )}
                                             {lyricsType === 'synced' ? (
-                                                <div style={{ paddingTop: '10rem', paddingBottom: '10rem' }}>
+                                                <div className="lyrics-padding">
                                                     {syncedLyrics.map((l, i) => (
                                                         <p key={i} id={`lyric-${i}`} onClick={() => jumpTo(l.time)} className={`lyrics-line ${i === activeIdx ? 'active' : ''}`}>{l.text}</p>
                                                     ))}
