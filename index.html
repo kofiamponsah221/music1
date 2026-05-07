@@ -105,7 +105,6 @@
         .play-button { margin-top: auto; background: rgba(55, 65, 81, 0.5); padding: 0.75rem; border-radius: 0.5rem; font-weight: bold; font-size: 0.75rem; color: #f3f4f6; border: none; cursor: pointer; transition: all 0.3s ease; }
         .play-button:hover { background: #4b5563; transform: scale(1.05); }
         
-        /* PLAYER WINDOW STYLES (Default Laptop) */
         .player-window {
             position: fixed; bottom: 2vh; left: 50%; transform: translateX(-50%);
             width: 900px; height: 600px; background: black;
@@ -165,9 +164,6 @@
         .wiki-header { font-size: 2rem; font-weight: 900; margin-bottom: 1rem; color: white; display: flex; align-items: center; gap: 0.5rem; }
         .wiki-link { display: inline-block; margin-top: 1.5rem; color: #60a5fa; text-decoration: none; font-weight: bold; border: 1px solid #60a5fa; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.2s; }
 
-        /* ========================================= */
-        /* THE MAGIC: MOBILE RESPONSIVE MEDIA STYLES */
-        /* ========================================= */
         @media (max-width: 768px) {
             body { padding: 1rem; padding-bottom: 6rem; }
             .logo { font-size: 2.5rem; }
@@ -175,7 +171,6 @@
             .search-button { padding: 1rem; }
             .songs-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
             
-            /* Force Player Window to Full Screen on Mobile */
             .player-window {
                 width: 100vw !important; height: 100vh !important;
                 max-width: 100vw !important; max-height: 100vh !important;
@@ -184,10 +179,8 @@
                 transform: none !important; border-radius: 0 !important; resize: none !important;
             }
             
-            /* Stack layout for mobile player */
             .player-content { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
             
-            /* Shrink Sidebar and center contents */
             .player-sidebar {
                 width: 100%; padding: 1.5rem; align-items: center;
                 border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -197,7 +190,6 @@
             .player-controls-panel { width: 100%; }
             .view-toggles { width: 100%; }
             
-            /* Allow scroll inside the stacked layout */
             .main-view-area { padding: 1.5rem; overflow-y: visible; flex: none; }
             .lyrics-padding { padding-top: 3rem; padding-bottom: 5rem; }
             
@@ -206,7 +198,6 @@
             .wiki-container { font-size: 1rem; padding: 1.5rem; }
             .wiki-header { font-size: 1.5rem; }
 
-            /* Hide the maximize button on phones because it's already full screen */
             .maximize-btn { display: none !important; }
         }
     </style>
@@ -380,18 +371,37 @@
                 if (view === 'wiki' && nowPlayingTrack) fetchWikiData(nowPlayingTrack);
             };
 
+            // THE FIX: Mobile Auto-Play Bypass Logic
             const onPlayerReady = (e) => {
                 ytPlayerRef.current = e.target;
                 setDuration(e.target.getDuration());
                 if (timeTrackerRef.current) clearInterval(timeTrackerRef.current);
                 timeTrackerRef.current = setInterval(() => setCurrentTime(e.target.getCurrentTime()), 300);
+                
+                // Try to force play
                 e.target.playVideo(); 
+                
+                // If the mobile OS blocks the autoplay, flip the UI to the Play button
+                setTimeout(() => {
+                    if (e.target.getPlayerState() !== 1) { 
+                        setIsPaused(true); 
+                    }
+                }, 500);
             };
 
+            // THE FIX: Bulletproof Toggle Logic
             const togglePlay = () => {
                 if (!ytPlayerRef.current) return;
-                if (isPaused) { ytPlayerRef.current.playVideo(); setIsPaused(false); }
-                else { ytPlayerRef.current.pauseVideo(); setIsPaused(true); }
+                const state = ytPlayerRef.current.getPlayerState();
+                
+                // If it's already playing, pause it. Otherwise, force it to play.
+                if (state === 1) { 
+                    ytPlayerRef.current.pauseVideo(); 
+                    setIsPaused(true); 
+                } else { 
+                    ytPlayerRef.current.playVideo(); 
+                    setIsPaused(false); 
+                }
             };
 
             const jumpTo = (t) => {
@@ -436,7 +446,7 @@
                                     else if (event.data === window.YT.PlayerState.ENDED) terminate();
                                 }
                             },
-                            playerVars: { autoplay: 1, controls: 0, origin: safeOrigin }
+                            playerVars: { autoplay: 1, controls: 0, origin: safeOrigin, playsinline: 1 }
                         });
                     }
                 };
@@ -444,7 +454,6 @@
                 if (window.YT && window.YT.Player) window.onYouTubeIframeAPIReady();
             }, [activeAudioId]);
 
-            // MOBILE AND MOUSE DRAG/TOUCH LOGIC
             useEffect(() => {
                 const playerWindow = document.querySelector('.player-window');
                 if (!playerWindow || !isPlaying) return;
@@ -462,11 +471,9 @@
                 let startX, startY, initialLeft, initialTop;
 
                 const handleDown = (e) => {
-                    // Disable dragging entirely if on a mobile phone (CSS handles fullscreen)
                     if (window.innerWidth <= 768) return; 
                     
                     isDragging = true;
-                    // Support both Mouse and Touch
                     startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
                     startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
                     
@@ -477,7 +484,7 @@
 
                 const handleMove = (e) => {
                     if (!isDragging) return;
-                    e.preventDefault(); // Stop scrolling while dragging
+                    e.preventDefault(); 
                     
                     playerWindow.style.bottom = 'auto'; playerWindow.style.right = 'auto'; playerWindow.style.transform = 'none';
 
@@ -499,12 +506,10 @@
 
                 const handleUp = () => { isDragging = false; header.style.cursor = 'grab'; };
 
-                // Mouse Events
                 header.addEventListener('mousedown', handleDown);
                 document.addEventListener('mousemove', handleMove, { passive: false });
                 document.addEventListener('mouseup', handleUp);
                 
-                // Touch Events for Tablets/iPads
                 header.addEventListener('touchstart', handleDown, { passive: false });
                 document.addEventListener('touchmove', handleMove, { passive: false });
                 document.addEventListener('touchend', handleUp);
